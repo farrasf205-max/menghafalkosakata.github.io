@@ -1,0 +1,534 @@
+</think>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tebak Kosakata Sekolah Kejuruan</title>
+    <style>
+        /* Styling dasar untuk body dan layout */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5); /* Warna lembut gradient */
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            transition: background 0.5s ease; /* Transisi halus untuk background */
+        }
+
+        /* Header dengan skor (hanya tampil di game) */
+        header {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-size: 18px;
+            font-weight: bold;
+            display: none; /* Sembunyikan sampai login */
+        }
+
+        /* Form login */
+        #loginForm {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        #loginForm h1 {
+            color: #1976d2;
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 15px;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            width: 100%;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Kontainer utama game (sembunyikan sampai login) */
+        .game-container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            display: none; /* Sembunyikan sampai login */
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        /* Kata soal */
+        .question {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #1976d2;
+        }
+
+        /* Pilihan jawaban */
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 18px;
+            border: none;
+            border-radius: 15px; /* Tombol membulat */
+            background: #4caf50;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s; /* Transisi hover */
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            background: #45a049;
+        }
+
+        /* Kelas untuk tombol benar (hijau) */
+        .correct {
+            background: #4caf50 !important; /* Hijau untuk benar */
+            color: white;
+        }
+
+        /* Kelas untuk tombol salah (merah) */
+        .wrong {
+            background: #f44336 !important; /* Merah untuk salah */
+            color: white;
+        }
+
+        /* Feedback jawaban */
+        .feedback {
+            font-size: 24px;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease; /* Transisi untuk muncul/hilang */
+        }
+
+        .feedback.show {
+            opacity: 1;
+        }
+
+        /* Penjelasan */
+        .explanation {
+            font-size: 18px;
+            margin-top: 15px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            color: #555;
+        }
+
+        .explanation.show {
+            opacity: 1;
+        }
+
+        /* Tombol next */
+        #nextBtn {
+            margin-top: 20px;
+            background: #2196f3;
+            display: none; /* Sembunyikan sampai jawab */
+        }
+
+        #nextBtn:hover {
+            background: #1976d2;
+        }
+
+        /* Tombol logout */
+        #logoutBtn {
+            margin-top: 20px;
+            background: #f44336;
+        }
+
+        #logoutBtn:hover {
+            background: #d32f2f;
+        }
+
+        /* Animasi fade-in untuk elemen */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Animasi slide-out untuk ganti soal */
+        .slide-out {
+            animation: slideOut 0.5s ease-in-out forwards;
+        }
+
+        @keyframes slideOut {
+            to { opacity: 0; transform: translateX(-100%); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Form Login -->
+    <div id="loginForm">
+        <h1>Login dengan Nickname</h1>
+        <p>Masukkan nickname kamu untuk memulai game!</p>
+        <input type="text" id="nicknameInput" placeholder="Masukkan nickname" required>
+        <button onclick="login()">Mulai Game</button>
+    </div>
+
+    <!-- Header Skor (Muncul setelah login) -->
+    <header id="score" style="display:none;">Skor: 0</header>
+
+    <!-- Kontainer Game (Muncul setelah login) -->
+    <div class="game-container" id="gameContainer" style="display:none;">
+        <div class="question" id="question">Memuat soal...</div>
+        <div class="options" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+        <div class="explanation" id="explanation"></div>
+        <button id="nextBtn" onclick="nextQuestion()" style="display:none;">Soal Berikutnya</button>
+        <button id="logoutBtn" onclick="logout()" style="display:none;">Logout</button>
+    </div>
+
+    <!-- Final screen: tampilkan setelah semua soal terjawab -->
+    <div id="finalScreen" style="display:none; text-align:center; max-width:600px; margin-top:20px;">
+        <h2>Selamat! Kamu telah menyelesaikan semua soal.</h2>
+        <p id="finalScore">Skor akhir: 0</p>
+        <button onclick="restartGame()" style="padding:12px 20px; border-radius:12px; background:#2196f3; color:#fff; border:none; cursor:pointer;">Main Lagi</button>
+    </div>
+
+    <script>
+        // Array kosakata: setiap objek berisi kata Jepang, arti benar, tiga pilihan salah, dan penjelasan
+        const vocabulary = [
+            { 
+                word: "せんせい", 
+                correct: "guru", 
+                wrongs: ["murid", "ruang kelas", "buku"], 
+                explanation: "せんせい berarti guru karena merujuk pada pengajar. Guru memainkan peran penting dalam mengajar siswa di sekolah kejuruan." 
+            },
+            { 
+                word: "がくせい", 
+                correct: "murid", 
+                wrongs: ["guru", "ruang kelas", "buku"], 
+                explanation: "がくせい berarti murid karena merujuk pada siswa. Murid belajar keterampilan praktis di sekolah kejuruan." 
+            },
+            { 
+                word: "きょうしつ", 
+                correct: "ruang kelas", 
+                wrongs: ["guru", "murid", "buku"], 
+                explanation: "きょうしつ berarti ruang kelas karena merujuk pada tempat belajar di dalam gedung. Di sekolah kejuruan, ini tempat teori dan diskusi." 
+            },
+            { 
+                word: "ほん", 
+                correct: "buku", 
+                wrongs: ["guru", "murid", "ruang kelas"], 
+                explanation: "ほん berarti buku karena merujuk pada bahan bacaan. Buku penting untuk pembelajaran di sekolah kejuruan." 
+            },
+            { 
+                word: "じかん", 
+                correct: "waktu", 
+                wrongs: ["belajar", "PR", "teman"], 
+                explanation: "じかん berarti waktu karena merujuk pada durasi atau jam. Mengelola waktu penting dalam rutinitas sekolah kejuruan." 
+            },
+            { 
+                word: "べんきょう", 
+                correct: "belajar", 
+                wrongs: ["waktu", "PR", "teman"], 
+                explanation: "べんきょう berarti belajar karena merujuk pada proses pembelajaran. Ini inti dari pendidikan di sekolah kejuruan." 
+            },
+            { 
+                word: "しゅくだい", 
+                correct: "PR", 
+                wrongs: ["waktu", "belajar", "teman"], 
+                explanation: "しゅくだい berarti PR karena merujuk pada pekerjaan rumah. PR membantu memperkuat pembelajaran di sekolah kejuruan." 
+            },
+            { 
+                word: "ともだち", 
+                correct: "teman", 
+                wrongs: ["waktu", "belajar", "PR"], 
+                explanation: "ともだち berarti teman karena merujuk pada rekan. Teman penting untuk dukungan sosial di sekolah kejuruan." 
+            },
+            { 
+                word: "かばん", 
+                correct: "tas", 
+                wrongs: ["penghapus", "ruang administrasi", "kepala sekolah"], 
+                explanation: "かばん berarti tas karena merujuk pada tas sekolah. Tas digunakan untuk membawa buku dan alat di sekolah kejuruan." 
+            },
+            { 
+                word: "けしごむ", 
+                correct: "penghapus", 
+                wrongs: ["tas", "ruang administrasi", "kepala sekolah"], 
+                explanation: "けしごむ berarti penghapus karena merujuk pada alat untuk menghapus tulisan. Penghapus penting dalam kegiatan menulis di sekolah." 
+            },
+            { 
+                word: "じむしつ", 
+                correct: "ruang administrasi", 
+                wrongs: ["tas", "penghapus", "kepala sekolah"], 
+                explanation: "じむしつ berarti ruang administrasi karena merujuk pada kantor administrasi. Ini tempat pengelolaan dokumen di sekolah kejuruan." 
+            },
+            { 
+                word: "こうちょう", 
+                correct: "kepala sekolah", 
+                wrongs: ["tas", "penghapus", "ruang administrasi"], 
+                explanation: "こうちょう berarti kepala sekolah karena merujuk pada pemimpin sekolah. Kepala sekolah mengawasi operasi sekolah kejuruan." 
+            },
+            { 
+                word: "じゅぎょう", 
+                correct: "pelajaran", 
+                wrongs: ["akuntansi", "perusahaan", "pegawai"], 
+                explanation: "じゅぎょう berarti pelajaran karena merujuk pada mata pelajaran. Pelajaran mencakup teori dan praktik di sekolah kejuruan." 
+            },
+            { 
+                word: "かいけい", 
+                correct: "akuntansi", 
+                wrongs: ["pelajaran", "perusahaan", "pegawai"], 
+                explanation: "かいけい berarti akuntansi karena merujuk pada pencatatan keuangan. Ini penting dalam jurusan bisnis di sekolah kejuruan." 
+            },
+            { 
+                word: "かいしゃ", 
+                correct: "perusahaan", 
+                wrongs: ["pelajaran", "akuntansi", "pegawai"], 
+                explanation: "かいしゃ berarti perusahaan karena merujuk pada organisasi bisnis. Sekolah kejuruan mempersiapkan siswa untuk dunia perusahaan." 
+            },
+            { 
+                word: "しゃいん", 
+                correct: "pegawai", 
+                wrongs: ["pelajaran", "akuntansi", "perusahaan"], 
+                explanation: "しゃいん berarti pegawai karena merujuk pada karyawan. Pegawai bekerja di perusahaan dan dipelajari di sekolah kejuruan." 
+            },
+            { 
+                word: "しゅうにゅう", 
+                correct: "pendapatan", 
+                wrongs: ["pengeluaran", "keuntungan", "kerugian"], 
+                explanation: "しゅうにゅう berarti pendapatan karena merujuk pada pemasukan uang. Ini konsep dasar dalam akuntansi di sekolah kejuruan." 
+            },
+            { 
+                word: "ししゅつ", 
+                correct: "pengeluaran", 
+                wrongs: ["pendapatan", "keuntungan", "kerugian"], 
+                explanation: "ししゅつ berarti pengeluaran karena merujuk pada biaya yang dikeluarkan. Mengelola pengeluaran penting dalam keuangan perusahaan." 
+            },
+            { 
+                word: "りえき", 
+                correct: "keuntungan", 
+                wrongs: ["pendapatan", "pengeluaran", "kerugian"], 
+                explanation: "りえき berarti keuntungan karena merujuk pada laba. Keuntungan adalah tujuan utama dalam bisnis di sekolah kejuruan." 
+            },
+            { 
+                word: "そんしつ", 
+                correct: "kerugian", 
+                wrongs: ["pendapatan", "pengeluaran", "keuntungan"], 
+                explanation: "そんしつ berarti kerugian karena merujuk pada rugi. Memahami kerugian membantu dalam pengambilan keputusan bisnis." 
+            },
+            { 
+                word: "ざいさん", 
+                correct: "aset", 
+                wrongs: ["utang", "biaya", "laporan keuangan"], 
+                explanation: "ざいさん berarti aset karena merujuk pada harta milik. Aset penting dalam laporan keuangan perusahaan." 
+            },
+            { 
+                word: "ふさい", 
+                correct: "utang", 
+                wrongs: ["aset", "biaya", "laporan keuangan"], 
+                explanation: "ふさい berarti utang karena merujuk pada kewajiban finansial. Mengelola utang krusial dalam akuntansi." 
+            },
+            { 
+                word: "けいひ", 
+                correct: "biaya", 
+                wrongs: ["aset", "utang", "laporan keuangan"], 
+                explanation: "けいひ berarti biaya karena merujuk pada pengeluaran operasional. Biaya dihitung dalam laporan keuangan." 
+            },
+            { 
+                word: "けっさん", 
+                correct: "laporan keuangan", 
+                wrongs: ["aset", "utang", "biaya"], 
+                explanation: "けっさん berarti laporan keuangan karena merujuk pada dokumen keuangan. Ini digunakan untuk menilai kesehatan perusahaan." 
+            }
+        ];
+
+        let currentQuestion = {}; // Objek soal saat ini
+        let score = 0; // Skor pemain
+        let usedQuestions = []; // Array untuk melacak soal yang sudah digunakan (untuk menghindari pengulangan)
+        let answeredCount = 0; // Jumlah soal yang sudah dijawab
+
+        // Fungsi untuk memilih soal acak yang belum digunakan
+        function getRandomQuestion() {
+            if (usedQuestions.length === vocabulary.length) {
+                usedQuestions = []; // Reset jika semua soal sudah digunakan
+            }
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * vocabulary.length);
+            } while (usedQuestions.includes(randomIndex));
+            usedQuestions.push(randomIndex);
+            return vocabulary[randomIndex];
+        }
+
+        // Fungsi untuk membuat pilihan jawaban (satu benar, tiga salah diacak)
+        function generateOptions(correct, wrongs) {
+            const options = [correct, ...wrongs];
+            // Acak urutan pilihan
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+            return options;
+        }
+
+        // Fungsi untuk menampilkan soal baru
+        function displayQuestion() {
+            currentQuestion = getRandomQuestion();
+            const options = generateOptions(currentQuestion.correct, currentQuestion.wrongs);
+
+            // Update elemen HTML
+            document.getElementById('question').textContent = currentQuestion.word;
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = ''; // Hapus pilihan sebelumnya
+
+            // Buat tombol untuk setiap pilihan
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.onclick = () => checkAnswer(option, button); // Pass button untuk styling
+                optionsContainer.appendChild(button);
+            });
+
+            // Reset feedback dan penjelasan
+            document.getElementById('feedback').classList.remove('show');
+            document.getElementById('explanation').classList.remove('show');
+            document.getElementById('nextBtn').style.display = 'none'; // Sembunyikan tombol next
+        }
+
+        // Fungsi untuk memeriksa jawaban (ditambahkan parameter button untuk styling)
+        function checkAnswer(selected, button) {
+            const feedback = document.getElementById('feedback');
+            const explanation = document.getElementById('explanation');
+            const allButtons = document.querySelectorAll('.options button'); // Ambil semua tombol pilihan
+
+            // Nonaktifkan semua tombol setelah klik
+            allButtons.forEach(btn => btn.disabled = true);
+
+            if (selected === currentQuestion.correct) {
+                feedback.textContent = "Benar! 🎉";
+                button.classList.add('correct'); // Tambahkan kelas hijau ke tombol benar
+                score++;
+                document.getElementById('score').textContent = `Skor: ${score}`;
+            } else {
+                feedback.textContent = `Salah 😅 Arti yang benar: ${currentQuestion.correct}`;
+                button.classList.add('wrong'); // Tambahkan kelas merah ke tombol salah
+                // Sorot tombol benar
+                allButtons.forEach(btn => {
+                    if (btn.textContent === currentQuestion.correct) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            // Tampilkan penjelasan
+            explanation.innerHTML = currentQuestion.explanation;
+            feedback.classList.add('show');
+            explanation.classList.add('show');
+
+            // Hitung soal yang sudah dijawab dan cek apakah semua soal sudah terjawab
+            answeredCount++;
+            if (answeredCount >= vocabulary.length) {
+                // Semua soal telah dijawab -> tampilkan halaman akhir
+                showFinalScreen();
+            } else {
+                // Tampilkan tombol next jika masih ada soal tersisa
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            }
+        }
+
+        // Fungsi untuk memulai game (dari form login)
+        function login() {
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            if (!nickname) {
+                alert('Masukkan nickname Anda!');
+                return;
+            }
+            // Sembunyikan form login, tampilkan kontainer game dan header skor
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+            document.getElementById('score').style.display = 'block';
+            document.getElementById('logoutBtn').style.display = 'inline-block';
+            document.getElementById('finalScreen').style.display = 'none';
+
+            // Reset skor dan soal yang sudah digunakan
+            score = 0;
+            usedQuestions = [];
+            answeredCount = 0; // reset counter soal yang dijawab
+            document.getElementById('score').textContent = `Skor: ${score}`;
+
+            displayQuestion(); // Tampilkan soal pertama
+        }
+
+        // Fungsi untuk soal berikutnya
+        function nextQuestion() {
+            // Tambahkan animasi slide-out
+            const container = document.getElementById('gameContainer');
+            container.classList.add('slide-out');
+            setTimeout(() => {
+                container.classList.remove('slide-out');
+                displayQuestion();
+            }, 300); // Sesuaikan dengan durasi animasi CSS
+        }
+
+        // Fungsi untuk logout
+        function logout() {
+            // Tampilkan kembali form login, sembunyikan kontainer game dan header skor
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('score').style.display = 'none';
+            document.getElementById('nicknameInput').value = ''; // Bersihkan input nickname
+            score = 0;
+            usedQuestions = [];
+            currentQuestion = {};
+        }
+
+        // Tampilkan halaman akhir ketika semua soal sudah terjawab
+        function showFinalScreen() {
+            // Set skor akhir sesuai permintaan (maks = jumlah soal)
+            const finalScore = vocabulary.length;
+            score = finalScore;
+            document.getElementById('score').textContent = `Skor: ${score}`;
+            document.getElementById('finalScore').textContent = `Skor akhir: ${score}`;
+
+            // Sembunyikan game container dan tampilkan final screen
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('finalScreen').style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        // Restart / main lagi: kembali ke login agar pengguna bisa mulai ulang
+        function restartGame() {
+            // Reset state dan tampilkan form login
+            score = 0;
+            usedQuestions = [];
+            answeredCount = 0;
+            currentQuestion = {};
+            document.getElementById('finalScreen').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('nicknameInput').value = '';
+            document.getElementById('score').style.display = 'none';
+        }
+
+        // Event listener untuk Enter pada input nickname (opsional)
+        document.getElementById('nicknameInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') login();
+        });
+    </script>
+</body>
+</html>
